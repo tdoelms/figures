@@ -1,4 +1,72 @@
-USER_DATA = [
+
+
+import faker
+import random
+
+class UserGenerator(object):
+    '''
+    usernames need to be unique
+    '''
+    def __init__(self, count):
+        self.iterations = count
+        self.counter = 0
+        self.fake = faker.Faker()
+        self.used_names = set()
+
+    def username(self):
+        '''
+        NOTE: recursion here. To make it bulletproof, limit the iterations
+        '''
+        username = self.fake.user_name()
+        if username in self.used_names:
+            return self.username()
+        else:
+            self.used_names.update([username])
+            return username;
+
+    def gender(self):
+        return random.choice('fm ')
+
+    def fullname(self, gender):
+        return dict(
+            f=self.fake.name_female(),
+            m=self.fake.name_male()
+            ).get(gender, self.fake.name())
+
+    def create_user(self):
+        gender = self.gender()
+        return dict(
+            username=self.fake.user_name(),
+            password=self.fake.password(),
+            email=self.fake.email(),
+            profile=dict(
+                fullname=self.fullname(gender),
+                gender=gender,
+                country=self.fake.country_code(),
+            )
+        )
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        if self.counter < self.iterations:
+            self.counter += 1
+            return self.create_user()
+        else:
+            raise StopIteration()
+
+
+def generate_user_data(count):
+    return [rec for rec in UserGenerator(count)]
+
+
+USER_DATA = generate_user_data(100)
+
+FIXED_USER_DATA = [
 
     # students
 
@@ -9,7 +77,7 @@ USER_DATA = [
         profile=dict(
             fullname='Amanda Smith',
             gender='f',
-            country='UK',
+            country='GB',
         )
     ),
     dict(

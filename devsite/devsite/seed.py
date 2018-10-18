@@ -1,5 +1,9 @@
 
 
+import datetime
+from dateutil.rrule import rrule, DAILY
+import random
+
 from django.contrib.auth import get_user_model
 
 from courseware.models import StudentModule
@@ -8,11 +12,58 @@ from openedx.core.djangoapps.xmodule_django.models import CourseKeyField
 from student.models import CourseAccessRole, CourseEnrollment, UserProfile
 
 from figures.models import CourseDailyMetrics, SiteDailyMetrics
-from figures.helpers import as_course_key, as_datetime
+from figures.helpers import as_course_key, as_datetime, days_from, prev_day
 from figures.pipeline import course_daily_metrics as pipeline_cdm
 from figures.pipeline import site_daily_metrics as pipeline_sdm
 
 from devsite import cans
+
+
+DAYS_BACK = 180
+LAST_DAY = prev_day(datetime.datetime.now())
+
+# def date_bin(days_back, count):
+#     '''Start simple: uniformish
+#     '''
+#     dates = []
+
+#     end_date = prev_day(datetime.datetime.now())
+#     start_date = days_from(end_date, abs(days_back) * -1)
+
+#     if count > days_back:
+#         per_bin = count / days_back
+#         remainder
+#     else:
+#         interval, remainder = divmod(days_back, count)
+
+#     for dt in rrule(DAILY, dtstart=start_date, until=end_date):
+
+#     return dates
+
+
+def days_back_list(days_back):
+    end_date = prev_day(datetime.datetime.now())
+    start_date = days_from(end_date, abs(days_back) * -1)
+    return [day for day in rrule(DAILY, dtstart=start_date, until=end_date)]
+
+
+# def date_bin(days_back, count):
+#     '''Start simple: uniformish
+#     '''
+#     dates = { }
+
+#     end_date = prev_day(datetime.datetime.now())
+#     start_date = days_from(end_date, abs(days_back) * -1)
+
+#     if count > days_back:
+#         per_bin = count / days_back
+#         remainder
+#     else:
+#         interval, remainder = divmod(days_back, count)
+
+#     for dt in rrule(DAILY, dtstart=start_date, until=end_date):
+
+#     return dates
 
 
 def seed_course_overviews(data=None):
@@ -27,6 +78,9 @@ def seed_course_overviews(data=None):
 
 
 def clear_mock_users(data=None):
+    '''
+    This has limited utility when dynamically generated users
+    '''
     if not data:
         data = cans.USER_DATA
     for rec in data:
@@ -36,10 +90,23 @@ def clear_mock_users(data=None):
         except get_user_model().DoesNotExist:
             pass
 
+def clear_non_admin_users():
+    '''
+    TODO: exclude course staff users?
+    '''
+    users = get_user_model().objects.exclude(
+        is_superuser=True).exclude(is_staff=True)
+    users.delete()
+
 
 def seed_users(data=None):
+    '''
+    TODO: handle duplicates
+    '''
     if not data:
         data = cans.USER_DATA
+
+    created_users = []
     for rec in data:
         profile_rec = rec.get('profile',None)
         user = get_user_model().objects.create_user(
@@ -50,6 +117,7 @@ def seed_users(data=None):
         user.is_staff = rec.get('is_staff', False)
         user.is_superuser = rec.get('is_superuser', False)
         user.save()
+        created_users.append(user)
         if profile_rec:
             profile = UserProfile.objects.create(
                 user=user,
@@ -57,9 +125,9 @@ def seed_users(data=None):
                 gender=profile_rec.get('gender',None),
                 country=profile_rec.get('country', None),
             )
+    return created_users
 
-
-def seed_course_enrollments(data=None):
+def seed_course_enrollments_fixed(data=None):
     '''
 
     '''
@@ -77,6 +145,35 @@ def seed_course_enrollments(data=None):
             #mode=rec.get('mode', )
             )
 
+def seed_course_enrollments_for_course(course_id, users, max_days_back):
+    '''
+
+    '''
+    # we want to space out enrollments over time, the past 6 months
+    today = datetime.datetime.now()
+
+    def enroll_date(max_days_back):
+        days_back = random.randint(1,abs(max_days_back))
+        return days_from(today, days_back * -1 )
+
+    for user in users:
+        print('seeding course enrollment for user {}'.format(user.username))
+        CourseEnrollment.objects.update_or_create(
+            course_id=as_course_key(course_id),
+            course_overview=CourseOverview.objects.get(id=course_id),
+            user=user,
+            #user=get_user_model().objects.get(username=rec['username']),
+            created=enroll_date(max_days_back),
+            #mode=rec.get('mode', )
+            )
+
+def seed_course_enrollments():
+    for co in CourseOverview.objects.all():
+        #users_in_course = random.randint(40,200)
+        users = seed_users(cans.users.UserGenerator(100))
+        seed_course_enrollments_for_course(co.id, users, DAYS_BACK)
+
+
 def seed_course_access_roles(data=None):
     if not data:
         data = cans.COURSE_TEAM_DATA
@@ -91,7 +188,7 @@ def seed_course_access_roles(data=None):
         )
 
 
-def seed_student_modules(data=None):
+def seed_student_modules_fixed(data=None):
     '''
     '''
     if not data:
@@ -103,6 +200,22 @@ def seed_student_modules(data=None):
             create=as_datetime(rec['created']),
             modified=as_datetime(rec['modified']),
         )
+
+def seed_student_modules(data=None):
+    '''
+    '''
+    def created_date(enroll_date):
+        return days_from(end_date, random.randint)
+    for ce in CourseEnrollment.objects.all():
+
+
+        StudentModule.objects.update_or_create(
+            student=ce.user,
+            course_id=ce.course_id,
+            create=as_datetime(rec['created']),
+            modified=as_datetime(rec['modified']),
+        )
+
 
 def seed_course_daily_metrics(data=None):
     if not data:
@@ -147,9 +260,18 @@ def seed_site_daily_metrics(data=None):
         print('collecting for date {}'.format(a_date))
 
 
+def clear_all():
+    CourseEnrollment.objects.all().delete()
+
+def seed_test():
+    clear_non_admin_users()
+    CourseEnrollment.objects.all().delete()
+    seed_course_enrollments()
+    seed_student_modules()
+
 def seed_all():
     seed_course_overviews()
-    clear_mock_users()
+    clear_non_admin_users()
     seed_users()
     seed_course_enrollments()
     seed_course_teams()
