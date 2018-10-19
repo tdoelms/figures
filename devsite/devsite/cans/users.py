@@ -6,11 +6,16 @@ TODO: Create course staff users
 import faker
 import random
 
+from student.models import UserProfile
+
 
 class UserGenerator(object):
     '''
     usernames need to be unique
     '''
+
+    WILL_USER_SET_EDU = 0.25
+
     def __init__(self, count):
         self.iterations = count
         self.counter = 0
@@ -37,6 +42,12 @@ class UserGenerator(object):
             m=self.fake.name_male()
             ).get(gender, self.fake.name())
 
+    @classmethod
+    def education(cls):
+        edu_choices = UserProfile.LEVEL_OF_EDUCATION_CHOICES
+        if random.random() < cls.WILL_USER_SET_EDU:
+            return edu_choices[random.randint(0,len(edu_choices)-1)][0]
+
     def create_user(self):
         gender = self.gender()
         return dict(
@@ -47,6 +58,7 @@ class UserGenerator(object):
                 fullname=self.fullname(gender),
                 gender=gender,
                 country=self.fake.country_code(),
+                level_of_education=self.education(),
             )
         )
 

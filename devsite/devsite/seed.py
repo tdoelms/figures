@@ -56,23 +56,8 @@ def seed_course_overviews(data=None):
         )
 
 
-def clear_mock_users(data=None):
-    '''
-    This has limited utility when dynamically generated users
-    '''
-    if not data:
-        data = cans.USER_DATA
-    for rec in data:
-        try:
-            user = get_user_model().objects.get(username=rec['username'])
-            user.delete()
-        except get_user_model().DoesNotExist:
-            pass
-
-
 def clear_non_admin_users():
     '''
-    TODO: exclude course staff users?
     '''
     users = get_user_model().objects.exclude(
         is_superuser=True).exclude(is_staff=True)
@@ -85,6 +70,7 @@ def seed_users(data=None):
     if not data:
         data = cans.USER_DATA
 
+    first_date = days_from(LAST_DAY, DAYS_BACK * -1)
     created_users = []
     for rec in data:
         try:
@@ -96,6 +82,7 @@ def seed_users(data=None):
                 )
             user.is_staff = rec.get('is_staff', False)
             user.is_superuser = rec.get('is_superuser', False)
+            user.date_joined = FAKE.date_between(first_date, LAST_DAY)
             user.save()
             created_users.append(user)
             if profile_rec:
