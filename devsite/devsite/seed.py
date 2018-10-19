@@ -233,21 +233,6 @@ def seed_course_daily_metrics():
         seed_course_daily_metrics_for_course(co.id)
 
 
-# def seed_site_daily_metrics(data=None):
-#     if not data:
-#         data = cans.SITE_DAILY_METRICS_DATA
-#     for rec in data:
-#         SiteDailyMetrics.objects.update_or_create(
-#             date_for=rec['date_for'],
-#             defaults=dict(
-#                 cumulative_active_user_count=rec['cumulative_active_user_count'],
-#                 todays_active_user_count=rec['todays_active_user_count'],
-#                 total_user_count=rec['total_user_count'],
-#                 course_count=rec['course_count'],
-#                 total_enrollment_count=rec['total_enrollment_count'],
-#             )
-#         )
-
 def seed_site_daily_metrics(data=None):
     '''
     Run seed_course_daily_metrics first
@@ -263,7 +248,6 @@ def seed_site_daily_metrics(data=None):
     #extractor = pipeline_cdm.CourseDailyMetricsExtractor()
 
     for dt in rrule(DAILY, dtstart=start_date, until=end_date):
-
         pipeline_sdm.SiteDailyMetricsLoader().load(date_for=dt, force_update=True)
 
 
