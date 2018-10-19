@@ -13,10 +13,6 @@ from .course_daily_metrics import COURSE_DAILY_METRICS_DATA
 from .site_daily_metrics import SITE_DAILY_METRICS_DATA
 
 
-
-
-
-
 COURSE_ACCESS_ROLE_DATA = [
     dict(
         username='wanda',
@@ -24,5 +20,3 @@ COURSE_ACCESS_ROLE_DATA = [
         course_id='course-v1:StarFleetAcademy+SFA01+2161',
         role='instructor'),
 ]
-
-

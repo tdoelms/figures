@@ -1,7 +1,11 @@
+'''
 
+TODO: Create course staff users
+'''
 
 import faker
 import random
+
 
 class UserGenerator(object):
     '''
