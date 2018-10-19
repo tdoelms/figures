@@ -1,0 +1,16 @@
+mkvirtualenv figures
+
+git clone git@github.com:appsembler/figures.git
+git checkout devsite-demo
+cd figures
+cd devsite
+pip install -r requirements.txt
+./manage.py migrate
+./manage.py createsuperuser
+
+./manage.py seed_data
+./manage.py runserver
+
+open browser to localhost:8000
+
+log in. click 'figures' link
