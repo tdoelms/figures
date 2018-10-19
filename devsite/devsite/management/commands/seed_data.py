@@ -15,4 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('Seeding mock data for Figures demo')
         seed.seed_course_overviews()
+
+        seed.wipe()
+        seed.seed_all()
         print('Done.')

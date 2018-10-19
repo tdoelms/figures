@@ -34,7 +34,7 @@ def generate_cdm_data_for_course(course_id):
     cdm_data = []
     yesterday = {}
     end_date = prev_day(datetime.datetime.now())
-    start_date = days_from(end_date, -60)
+    start_date = days_from(end_date, -180)
 
     for dt in rrule(DAILY, dtstart=start_date, until=end_date):
         enrollment_count = yesterday.get('enrollment_count',0) + randint(0,10)
