@@ -158,7 +158,6 @@ def get_num_learners_completed(course_id, date_for):
         created_date__lt=next_day(date_for))
     return certificates.count()
 
-
 # Formal extractor classes
 
 
@@ -219,10 +218,10 @@ class CourseDailyMetricsExtractor(object):
 
         data['enrollment_count'] = course_enrollments.count()
 
-        active_learners_today = get_active_learner_ids_today(
+        active_learner_ids_today = get_active_learner_ids_today(
             course_id, date_for,)
-        if active_learners_today:
-            active_learners_today = active_learners_today.count()
+        if active_learner_ids_today:
+            active_learners_today = active_learner_ids_today.count()
         else:
             active_learners_today = 0
 
