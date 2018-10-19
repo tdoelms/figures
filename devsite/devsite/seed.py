@@ -8,6 +8,7 @@ import random
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 
+from certificates.models import GeneratedCertificate
 from courseware.models import StudentModule
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.xmodule_django.models import CourseKeyField
@@ -25,24 +26,6 @@ DAYS_BACK = 180
 LAST_DAY = prev_day(datetime.datetime.now())
 
 FAKE = faker.Faker()
-
-# def date_bin(days_back, count):
-#     '''Start simple: uniformish
-#     '''
-#     dates = []
-
-#     end_date = prev_day(datetime.datetime.now())
-#     start_date = days_from(end_date, abs(days_back) * -1)
-
-#     if count > days_back:
-#         per_bin = count / days_back
-#         remainder
-#     else:
-#         interval, remainder = divmod(days_back, count)
-
-#     for dt in rrule(DAILY, dtstart=start_date, until=end_date):
-
-#     return dates
 
 
 def days_back_list(days_back):
@@ -86,6 +69,7 @@ def clear_mock_users(data=None):
         except get_user_model().DoesNotExist:
             pass
 
+
 def clear_non_admin_users():
     '''
     TODO: exclude course staff users?
@@ -97,7 +81,6 @@ def clear_non_admin_users():
 
 def seed_users(data=None):
     '''
-    TODO: handle duplicates
     '''
     if not data:
         data = cans.USER_DATA
@@ -126,29 +109,11 @@ def seed_users(data=None):
             print('**** COLLISION **** {}'.format(e))
     return created_users
 
-def seed_course_enrollments_fixed(data=None):
-    '''
-
-    '''
-    if not data:
-        data = cans.COURSE_ENROLLMENT_DATA
-
-    for rec in data:
-        course_id = as_course_key(rec['course_id'])
-        print('seeding course enrollment for user {}'.format(rec['username']))
-        CourseEnrollment.objects.update_or_create(
-            course_id=course_id,
-            course_overview=CourseOverview.objects.get(id=course_id),
-            user=get_user_model().objects.get(username=rec['username']),
-            created=as_datetime(rec['created']),
-            #mode=rec.get('mode', )
-            )
 
 def seed_course_enrollments_for_course(course_id, users, max_days_back):
     '''
 
     '''
-    # we want to space out enrollments over time, the past 6 months
     today = datetime.datetime.now()
 
     def enroll_date(max_days_back):
@@ -161,10 +126,9 @@ def seed_course_enrollments_for_course(course_id, users, max_days_back):
             course_id=as_course_key(course_id),
             course_overview=CourseOverview.objects.get(id=course_id),
             user=user,
-            #user=get_user_model().objects.get(username=rec['username']),
             created=enroll_date(max_days_back),
-            #mode=rec.get('mode', )
             )
+
 
 def seed_course_enrollments():
     for co in CourseOverview.objects.all():
@@ -187,30 +151,7 @@ def seed_course_access_roles(data=None):
         )
 
 
-def seed_student_modules_fixed(data=None):
-    '''
-    '''
-    if not data:
-        data = cans.STUDENT_MODULE_DATA
-    for rec in data:
-        StudentModule.objects.update_or_create(
-            student=get_user_model().objects.get(username=rec['username']),
-            course_id=as_course_key(rec['course_id']),
-            create=as_datetime(rec['created']),
-            modified=as_datetime(rec['modified']),
-        )
-
-
-# Don't need this, can use Faker
-# def rand_day_between(lb, ub):
-#     days = (ub - lb).days
-#     day = days_from(lb, randint(0, days))
-#     return sorted([lb, day, ub])[1]
-
-
-
-
-def seed_student_modules(data=None):
+def seed_student_modules():
     '''
     We're assuming active students here.
     Improvement is to skip a few and make others more active
@@ -228,6 +169,28 @@ def seed_student_modules(data=None):
                 modified=FAKE.date_between(ce.created, LAST_DAY),
             )
 
+
+def seed_course_completions():
+    '''
+    go over the dates
+    '''
+    end_date = LAST_DAY
+    start_date = days_from(end_date, -180)
+
+
+    for co in CourseOverview.objects.all():
+        
+        # Note there is a performance hit for using '?'
+        qs = CourseEnrollment.objects.filter(course_id=co.id)
+        # we just want a few of the enrollments to have completed
+
+        # first cut, have 25% of learners complete course
+        sample = int(qs.count() * 0.25)
+        for ce in qs.order_by('?')[:sample]:
+            GeneratedCertificate.objects.create(
+                user=ce.user,
+                course_id=co.id,
+                created_date=FAKE.date_between(ce.created, LAST_DAY))
 
 
 def seed_course_daily_metrics_fixed(data=None):
@@ -320,5 +283,6 @@ def seed_all():
     # Need to fix this one
     #seed_course_access_roles()
     seed_student_modules()
+    seed_course_completions()
     seed_course_daily_metrics()
     seed_site_daily_metrics()
