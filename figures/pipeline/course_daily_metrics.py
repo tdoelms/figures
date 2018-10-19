@@ -154,8 +154,10 @@ def get_average_days_to_complete(course_id, date_for):
 
 def get_num_learners_completed(course_id, date_for):
     certificates = GeneratedCertificate.objects.filter(
-        course_id=as_course_key(course_id))
+        course_id=as_course_key(course_id),
+        created_date__lt=next_day(date_for))
     return certificates.count()
+
 
 # Formal extractor classes
 
