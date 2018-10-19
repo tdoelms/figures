@@ -1,4 +1,4 @@
-.PHONY: help run shell
+.PHONY: help run shell seed
 
 help:
 	@echo "Targets:"
@@ -11,4 +11,7 @@ run:
 
 shell:
 	./manage.py shell_plus
+
+seed:
+	./manage.py seed_data
 
