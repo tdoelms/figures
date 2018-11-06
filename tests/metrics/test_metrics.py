@@ -1,4 +1,4 @@
-'''
+"""
 
 For these tests, we need to build at least one set of data that includes
 
@@ -24,7 +24,7 @@ a rather large set of time series data. We probably want to create a separate
 test suite so that we can do much more robust data validation with bigger time
 series sets
 
-'''
+"""
 import datetime
 
 from dateutil.rrule import rrule, DAILY
@@ -54,7 +54,7 @@ DEFAULT_END_DATE = datetime.datetime(2018, 3, 1, 0, 0, tzinfo=utc)
 
 
 def create_student_module_test_data(start_date, end_date):
-    '''
+    """
 
     NOTE: There are many combinations of unique students, courses, and student
     state. We're going to start with a relatively simple set
@@ -65,7 +65,7 @@ def create_student_module_test_data(start_date, end_date):
 
     If we create a record per day then we can work off of a unique datapoint
     per day
-    '''
+    """
     student_modules = []
     user = UserFactory()
     course_overview = CourseOverviewFactory()
@@ -87,12 +87,12 @@ def create_student_module_test_data(start_date, end_date):
 
 
 def create_site_daily_metrics_data(start_date, end_date):
-    '''
+    """
     NOTE: We can generalize this and the `create_course_daily_metrics_data`
     function with considering that the course mertrics creation method can
     assign a course id. When we become site-aware, then the site metrics will
     also need to be able to assign a site identifier
-    '''
+    """
     def incr_func(key):
         return dict(
             cumulative_active_user_count=2,
@@ -122,14 +122,14 @@ def create_site_daily_metrics_data(start_date, end_date):
 
 
 def create_course_daily_metrics_data(start_date, end_date, course_id=None):
-    '''
+    """
     Creates a daily sequence of CourseDailyMetrics objects
 
     If course_id is provided as a parameter, then all CourseDailyMetrics objects
     will have that course_id. This is useful for testing time series for a
     specific course. Otherwise FactoryBoy assigns the course id in the
     ``tests.factories`` module
-    '''
+    """
     # Initial values
     data = dict(
         enrollment_count=2,
@@ -160,10 +160,10 @@ def create_course_daily_metrics_data(start_date, end_date, course_id=None):
 
 
 def create_users_joined_over_time(start_date, end_date):
-    '''
+    """
     creates users. Each user joins on a succesive date between the dates
     pass as arguments
-    '''
+    """
     users = []
     for dt in rrule(DAILY, dtstart=start_date, until=end_date):
         users.append(UserFactory(date_joined=dt))
@@ -172,13 +172,13 @@ def create_users_joined_over_time(start_date, end_date):
 
 @pytest.mark.django_db
 class TestGetMonthlySiteMetrics(object):
-    '''
+    """
     This test also exercises the time period getters used in
     metrics.get_monthly_site_metrics
-    '''
+    """
     @pytest.fixture(autouse=True)
     def setup(self, db):
-        self.today = datetime.datetime(2018, 1, 6)
+        self.today = datetime.datetime(2018, 1, 6, tzinfo=utc)
         self.site_daily_metrics = None
         self.expected_keys = (
             'monthly_active_users',
@@ -212,11 +212,11 @@ class TestGetMonthlyActiveUsers(object):
 
 @pytest.mark.django_db
 class TestSiteMetricsGetters(object):
-    '''The purpose of this class is to test the individual time period getter
+    """The purpose of this class is to test the individual time period getter
     functions
 
     TODO: Pull out the start/end date setup into a 'TimeSeriesTest' base class
-    '''
+    """
     @pytest.fixture(autouse=True)
     def setup(self, db):
         self.data_start_date = DEFAULT_START_DATE
@@ -230,9 +230,9 @@ class TestSiteMetricsGetters(object):
             end_date=self.data_end_date)
 
     def test_get_active_users_for_time_period(self):
-        '''
+        """
 
-        '''
+        """
         student_module_sets = []
         for i in range(0, 3):
             student_module_sets.append(
@@ -246,12 +246,12 @@ class TestSiteMetricsGetters(object):
         assert count == len(student_module_sets)
 
     def test_get_total_site_users_for_time_period(self):
-        '''
+        """
         TODO: add users who joined before and after the time period, and
         compare the count to the users created on or before the end date
 
         TODO: Create
-        '''
+        """
         users = create_users_joined_over_time(
             start_date=self.data_start_date,
             end_date=self.data_end_date)
@@ -263,10 +263,10 @@ class TestSiteMetricsGetters(object):
         assert count == len(users)
 
     def test_get_total_site_users_joined_for_time_period(self):
-        '''
+        """
         TODO: add users who joined before and after the time period, and
         compare the count to the users created within the time period
-        '''
+        """
         users = create_users_joined_over_time(
             start_date=self.data_start_date,
             end_date=self.data_end_date)
@@ -276,10 +276,10 @@ class TestSiteMetricsGetters(object):
         assert count == len(users)
 
     def test_get_total_enrollments_for_time_period(self):
-        '''
+        """
         We're incrementing values for test data, so the last SiteDailyMetrics
         record will have the max value
-        '''
+        """
         count = metrics.get_total_enrollments_for_time_period(
             start_date=self.data_start_date,
             end_date=self.data_end_date)
@@ -287,10 +287,10 @@ class TestSiteMetricsGetters(object):
         assert count == self.site_daily_metrics[-1].total_enrollment_count
 
     def test_get_total_site_courses_for_time_period(self):
-        '''
+        """
         We're incrementing values for test data, so the last SiteDailyMetrics
         record will have the max value
-        '''
+        """
         count = metrics.get_total_site_courses_for_time_period(
             start_date=self.data_start_date,
             end_date=self.data_end_date)
@@ -298,10 +298,10 @@ class TestSiteMetricsGetters(object):
         assert count == self.site_daily_metrics[-1].course_count
 
     def test_get_total_course_completions_for_time_period(self):
-        '''
+        """
         We're incrementing values for test data, so the last SiteDailyMetrics
         record will have the max value
-        '''
+        """
 
         cdm = create_course_daily_metrics_data(
             start_date=self.data_start_date,
@@ -312,10 +312,10 @@ class TestSiteMetricsGetters(object):
         assert count == cdm[-1].num_learners_completed
 
     def test_get_monthly_site_metrics(self):
-        '''
+        """
         Since we are testing results for individual getters in other test
         methods in this class, our prime goal is to ensure proper structure
-        '''
+        """
         expected_top_lvl_keys = [
             'total_site_users',
             'total_course_completions',
@@ -336,7 +336,7 @@ class TestSiteMetricsGetters(object):
 
 @pytest.mark.django_db
 class TestCourseMetricsGetters(object):
-    '''
+    """
     Test the metrics functions that retrieve metrics for a specific course over
     a time series
 
@@ -355,7 +355,7 @@ class TestCourseMetricsGetters(object):
     increments values over time so that the last record in
     self.course_daily_metrics contains the maximum value. This of course won't
     work for averaged metrics
-    '''
+    """
     @pytest.fixture(autouse=True)
     def setup(self, db):
         self.data_start_date = DEFAULT_START_DATE
@@ -370,9 +370,9 @@ class TestCourseMetricsGetters(object):
         return sum(data)/val_type(len(data))
 
     def test_get_course_enrolled_users_for_time_period(self):
-        '''
+        """
         Validates results against the max value for the metrics model attribute
-        '''
+        """
         expected = self.course_daily_metrics[-1].enrollment_count
         actual = metrics.get_course_enrolled_users_for_time_period(
             start_date=self.data_start_date,

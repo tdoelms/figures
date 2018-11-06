@@ -1,6 +1,6 @@
-'''
+"""
 Helper functions to make data handling and conversions easier
-'''
+"""
 
 import calendar
 import datetime
@@ -14,14 +14,14 @@ from opaque_keys.edx.keys import CourseKey
 
 
 def as_course_key(course_id):
-    '''Returns course id as a CourseKey instance
+    """Returns course id as a CourseKey instance
 
     Convenience method to return the paramater unchanged if it is of type
     ``CourseKey`` or attempts to convert to ``CourseKey`` if of type str or
     unicode.
 
     Raises TypeError if an unsupported type is provided
-    '''
+    """
     if isinstance(course_id, CourseKey):
         return course_id
     elif isinstance(course_id, basestring):
@@ -32,10 +32,10 @@ def as_course_key(course_id):
 
 
 def as_datetime(val):
-    '''
+    """
     TODO: Add arg flag to say if caller wants end of day, beginning of day
     or a particular time of day if the param is a datetime.date obj
-    '''
+    """
     if isinstance(val, datetime.datetime):
         return val
     elif isinstance(val, datetime.date):
@@ -47,7 +47,7 @@ def as_datetime(val):
             ).replace(tzinfo=utc)
 
     elif isinstance(val, basestring):
-        return dateutil_parse(val)
+        return dateutil_parse(val).replace(tzinfo=utc)
     else:
         raise TypeError(
             'value of type "{}" cannot be converted to a datetime object'.format(
@@ -55,10 +55,10 @@ def as_datetime(val):
 
 
 def as_date(val):
-    '''Casts the value to a ``datetime.date`` object if possible
+    """Casts the value to a ``datetime.date`` object if possible
 
     Else raises ``TypeError``
-    '''
+    """
     # Important to check if datetime first because datetime.date objects
     # pass the isinstance(obj, datetime.date) test
     if isinstance(val, datetime.datetime):
@@ -94,13 +94,13 @@ def prev_day(val):
 # TODO: Consider changing name to 'months_back_iterator' or similar
 # TODO: implement or removed include_month_for
 def previous_months_iterator(month_for, months_back, include_month_for=False):
-    '''Iterator returns a year,month tulbe for n months including the month_for
+    """Iterator returns a year,month tulbe for n months including the month_for
 
     month_for is either a date, datetime, or tuple with year and month
     months back is the number of months to iterate
 
     includes the month_for
-    '''
+    """
 
     if isinstance(month_for, tuple):
         # TODO make sure we've got just two values in the tuple

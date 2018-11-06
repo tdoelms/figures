@@ -24,6 +24,7 @@ from figures.helpers import (
 
 from tests.factories import COURSE_ID_STR_TEMPLATE
 
+
 class TestCourseKeyHelper(object):
     '''Tests the figures.helpers.as_course_key method
     '''
@@ -76,14 +77,14 @@ class TestDateTimeHelper(object):
     def test_get_now_from_str(self):
         format = '%Y-%m-%d %H:%M:%S'
         a_datetime_str = self.now.strftime(format)
-        expected = dateutil_parse(a_datetime_str)
+        expected = dateutil_parse(a_datetime_str).replace(tzinfo=utc)
         assert isinstance(a_datetime_str, str)
         assert as_datetime(a_datetime_str) == expected
 
     def test_get_now_from_unicode(self):
         format = '%Y-%m-%d %H:%M:%S'
         a_datetime_str = unicode(self.now.strftime(format))
-        expected = dateutil_parse(a_datetime_str)
+        expected = dateutil_parse(a_datetime_str).replace(tzinfo=utc)
         assert isinstance(a_datetime_str, unicode)
         assert as_datetime(a_datetime_str) == expected
 
@@ -156,9 +157,9 @@ class TestDeltaDays(object):
     def setup(self):
         self.now = datetime.datetime(2018, 6, 1)
 
-    @pytest.mark.parametrize('days', range(-2,3))
+    @pytest.mark.parametrize('days', range(-2, 3))
     def test_days_from(self, days):
-        '''TODO: Test with input as a 
+        '''TODO: Test with input as a:
         - datetime
         - date
         - str
@@ -177,7 +178,6 @@ class TestDeltaDays(object):
         with pytest.raises(TypeError):
             days_from("some string", 1)
 
-
     def test_prev_day(self):
         expected = self.now + datetime.timedelta(days=-1)
         assert prev_day(self.now) == expected
@@ -186,8 +186,8 @@ class TestDeltaDays(object):
 class TestMonthIterator(object):
 
     @pytest.mark.parametrize('month_for, months_back, first_month', [
-        ((2018,1,31), 0, datetime.date(2018,1,1)),
-        ((2018,1,31), 6, datetime.date(2017,7,1)),
+        ((2018, 1, 31), 0, datetime.date(2018, 1, 1)),
+        ((2018, 1, 31), 6, datetime.date(2017, 7, 1)),
         ])
     def test_previous_months_iterator(self, month_for, months_back, first_month):
 

@@ -1,9 +1,9 @@
-'''Tests figures.pipeline.
+"""Tests figures.pipeline.
 
 TODO:
 
 * Add tests for the individual field extractors
-'''
+"""
 
 import datetime
 import pytest
@@ -15,7 +15,7 @@ from openedx.core.djangoapps.content.course_overviews.models import (
     CourseOverview,
 )
 
-from figures.helpers import prev_day
+from figures.helpers import as_datetime, prev_day
 from figures.models import SiteDailyMetrics
 from figures.pipeline import site_daily_metrics as pipeline_sdm
 
@@ -76,21 +76,21 @@ SDM_EXPECTED_RESULTS = dict(
 
 @pytest.mark.django_db
 class TestCourseDailyMetricsMissingCdm(object):
-    '''
+    """
     TODO: Do we want to add a test for when there are no courses?
-    '''
+    """
     @pytest.fixture(autouse=True)
     def setup(self, db):
-        '''
-        '''
+        """
+        """
         self.date_for = DEFAULT_END_DATE
         self.course_count = 4
         self.course_overviews = [CourseOverviewFactory(
             created=self.date_for) for i in range(self.course_count)]
 
     def test_no_missing(self):
-        '''
-        '''
+        """
+        """
         [CourseDailyMetricsFactory(
             date_for=self.date_for,
             course_id=course.id) for course in self.course_overviews]
@@ -99,8 +99,8 @@ class TestCourseDailyMetricsMissingCdm(object):
         assert course_ids == set([])
 
     def test_missing(self):
-        '''
-        '''
+        """
+        """
         [
             CourseDailyMetricsFactory(
                 date_for=self.date_for, course_id=self.course_overviews[0].id),
@@ -114,9 +114,9 @@ class TestCourseDailyMetricsMissingCdm(object):
 
 @pytest.mark.django_db
 class TestCourseDailyMetricsPipelineFunctions(object):
-    '''
+    """
     Run tests on standalone methods in pipeline.site_daily_metrics
-    '''
+    """
     @pytest.fixture(autouse=True)
     def setup(self, db):
         self.date_for = datetime.date(2018, 6, 1)
@@ -152,17 +152,17 @@ class TestCourseDailyMetricsPipelineFunctions(object):
 
 @pytest.mark.django_db
 class TestSiteDailyMetricsExtractor(object):
-    '''
+    """
     TODO: We need to test with ``date_for`` as both for now and a time in the past
-    '''
+    """
     @pytest.fixture(autouse=True)
     def setup(self, db):
         self.date_for = datetime.date(2018, 10, 1)
         self.users = [UserFactory(
-            date_joined=self.date_for - datetime.timedelta(days=60)
+            date_joined=as_datetime(self.date_for - datetime.timedelta(days=60))
             ) for i in range(0, 3)]
         self.course_overviews = [CourseOverviewFactory(
-            created=self.date_for - datetime.timedelta(days=60)
+            created=as_datetime(self.date_for - datetime.timedelta(days=60))
             ) for i in range(0, 3)]
         self.cdm_recs = [CourseDailyMetricsFactory(
             date_for=self.date_for,
